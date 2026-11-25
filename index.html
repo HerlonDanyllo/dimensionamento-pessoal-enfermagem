@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Dimensionamento de Enfermagem - COFEN 743/2024</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border-color: #e2e8f0;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --success: #059669;
+      --success-light: #d1fae5;
+      --warning: #d97706;
+      --accent: #6366f1;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #0369a1 0%, #0f172a 100%);
+      color: white;
+      padding: 28px 32px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: #bae6fd;
+      font-size: 0.95rem;
+    }
+
+    .badge-cofen {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: var(--primary);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid Layout for Simulator */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 992px) {
+      .sim-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Form Inputs */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .input-group input, .input-group select {
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      background-color: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+
+    .input-group input:focus, .input-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    /* Tables */
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .custom-table th, .custom-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .custom-table th {
+      background: #f1f5f9;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .custom-table tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    .patient-input {
+      width: 80px;
+      padding: 8px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .patient-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+    }
+
+    .num-col {
+      font-family: 'Fira Code', monospace;
+      font-weight: 500;
+    }
+
+    /* Results Dashboard */
+    .kpi-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .kpi-card.highlight {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white;
+      border: none;
+      box-shadow: var(--shadow-md);
+      grid-column: span 2;
+    }
+
+    .kpi-card.highlight .kpi-label {
+      color: #bae6fd;
+    }
+
+    .kpi-card.highlight .kpi-val {
+      color: #ffffff;
+      font-size: 2.25rem;
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .kpi-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-primary);
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .team-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .team-item {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+    }
+
+    .team-item.enf {
+      border-top: 4px solid #0284c7;
+    }
+
+    .team-item.tec {
+      border-top: 4px solid #059669;
+    }
+
+    .team-item .count {
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-primary);
+    }
+
+    .team-item .role {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .team-item .pct {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Step by step formulas */
+    .math-step {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .math-step code {
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      color: #0369a1;
+      display: block;
+      margin-top: 4px;
+      font-size: 0.9rem;
+    }
+
+    /* Preset scenarios button */
+    .preset-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .preset-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border-color);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: #bae6fd;
+    }
+
+    /* Guide & Reference Cards */
+    .guide-box {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .guide-box h3 {
+      font-size: 1.1rem;
+      color: #0369a1;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .pill-blue { background: #e0f2fe; color: #0369a1; }
+    .pill-green { background: #dcfce7; color: #15803d; }
+    .pill-amber { background: #fef3c7; color: #b45309; }
+    .pill-purple { background: #f3e8ff; color: #7e22ce; }
+    .pill-red { background: #fee2e2; color: #b91c1c; }
+
+    /* Exercise Card */
+    .exercise-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+    }
+
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+
+    .toggle-solution {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .solution-box {
+      display: none;
+      margin-top: 14px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .solution-box.show {
+      display: block;
+      animation: fadeIn 0.2s;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge-cofen">Parâmetro Técnico Oficial</div>
+      <h1>Dimensionamento de Pessoal de Enfermagem</h1>
+      <p>Simulador Dinâmico e Ferramenta Didática Interativa de Ensino (Resolução COFEN nº 743/2024)</p>
+    </header>
+
+    <!-- Navegação de Abas -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('simulador')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        Simulador de Dimensionamento
+      </button>
+      <button class="tab-btn" onclick="switchTab('guia')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        Diretrizes e Parâmetros COFEN
+      </button>
+      <button class="tab-btn" onclick="switchTab('exercicios')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        Exercícios de Aula & Casos Clínicos
+      </button>
+    </nav>
+
+    <!-- ABA 1: SIMULADOR INTERATIVO -->
+    <div id="pane-simulador" class="tab-pane active">
+      
+      <div class="preset-btn-group">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); align-self: center; margin-right: 4px;">Carregar Cenário Rápido:</span>
+        <button class="preset-btn" onclick="loadPreset('clinica')">🏥 Enfermaria Cirúrgica (20 leitos)</button>
+        <button class="preset-btn" onclick="loadPreset('uti')">🚨 UTI Adulto (10 leitos)</button>
+        <button class="preset-btn" onclick="loadPreset('semi')">🩺 Semi-Intensivo Pediátrico (12 leitos)</button>
+        <button class="preset-btn" onclick="loadPreset('limpar')">🔄 Limpar / Personalizado</button>
+      </div>
+
+      <div class="sim-layout">
+        <!-- Coluna da Esquerda: Inputs -->
+        <div>
+          <!-- Cartão de Configurações da Unidade -->
+          <div class="card">
+            <h2 class="card-title">1. Configurações da Unidade</h2>
+            <div class="form-grid">
+              <div class="input-group">
+                <label for="unit-name">Nome do Setor / Unidade</label>
+                <input type="text" id="unit-name" value="Enfermaria de Clínica Médica">
+              </div>
+              <div class="input-group">
+                <label for="workload">Jornada Semanal da Equipe</label>
+                <select id="workload" onchange="calculate()">
+                  <option value="30">30 horas semanais (k = 0,2333)</option>
+                  <option value="36" selected>36 horas semanais (k = 0,1944)</option>
+                  <option value="40">40 horas semanais (k = 0,1750)</option>
+                  <option value="44">44 horas semanais (k = 0,1591)</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="ist-pct">Índice de Segurança Técnica (IST %)</label>
+                <input type="number" id="ist-pct" value="15" min="15" step="1" oninput="calculate()">
+              </div>
+              <div class="input-group">
+                <label for="total-beds">Capacidade Instalada (Leitos)</label>
+                <input type="number" id="total-beds" value="30" min="1" oninput="calculate()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Cartão de Pacientes por Complexidade (SCP) -->
+          <div class="card">
+            <h2 class="card-title">
+              <span>2. Censo Diário Médio (SCP)</span>
+              <span id="occupancy-badge" class="pill pill-blue">Ocupação: 85%</span>
+            </h2>
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Nível de Assistência</th>
+                  <th style="text-align: center;">Pacientes</th>
+                  <th style="text-align: center;">Horas COFEN</th>
+                  <th style="text-align: right;">THE Parcial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>Cuidado Mínimo (PCM)</strong><br>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Estáveis e autocuidado</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" class="patient-input" id="p-pcm" value="10" min="0" oninput="calculate()">
+                  </td>
+                  <td style="text-align: center;" class="num-col">4h</td>
+                  <td style="text-align: right;" class="num-col" id="the-pcm">40.0h</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Cuidado Intermediário (PCI)</strong><br>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Dependência parcial / suporte</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" class="patient-input" id="p-pci" value="9" min="0" oninput="calculate()">
+                  </td>
+                  <td style="text-align: center;" class="num-col">6h</td>
+                  <td style="text-align: right;" class="num-col" id="the-pci">54.0h</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Alta Dependência (PCAD)</strong><br>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Totalmente dependente / sem instabilidade</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" class="patient-input" id="p-pcad" value="5" min="0" oninput="calculate()">
+                  </td>
+                  <td style="text-align: center;" class="num-col">10h</td>
+                  <td style="text-align: right;" class="num-col" id="the-pcad">50.0h</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Semi-intensivo (PCSI)</strong><br>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Risco potencial / monitoramento contínuo</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" class="patient-input" id="p-pcsi" value="2" min="0" oninput="calculate()">
+                  </td>
+                  <td style="text-align: center;" class="num-col">10h</td>
+                  <td style="text-align: right;" class="num-col" id="the-pcsi">20.0h</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Intensivo (PCIt)</strong><br>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Risco iminente / suporte orgânico avançado</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" class="patient-input" id="p-pcit" value="0" min="0" oninput="calculate()">
+                  </td>
+                  <td style="text-align: center;" class="num-col">18h</td>
+                  <td style="text-align: right;" class="num-col" id="the-pcit">0.0h</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr style="background: #f8fafc; font-weight: 700;">
+                  <td>Total Diário de Pacientes</td>
+                  <td style="text-align: center;" class="num-col" id="total-patients">26</td>
+                  <td style="text-align: center;">—</td>
+                  <td style="text-align: right;" class="num-col" id="the-total">164.0h</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Coluna da Direita: Resultados e Painel Analítico -->
+        <div>
+          <div class="card" style="border-top: 4px solid var(--primary);">
+            <h2 class="card-title">3. Síntese do Dimensionamento</h2>
+            
+            <div class="kpi-container">
+              <div class="kpi-card highlight">
+                <div class="kpi-label">Equipe Total Recomendada (QP)</div>
+                <div class="kpi-val" id="res-qp-ceil">37</div>
+                <div class="kpi-sub" id="res-qp-raw">Valor exato calculado: 36.65 profissionais</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Carga Diária (THE)</div>
+                <div class="kpi-val" id="res-the">164.0h</div>
+                <div class="kpi-sub">Horas diárias totais</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Constante Marinho (k)</div>
+                <div class="kpi-val" id="res-k">0.1944</div>
+                <div class="kpi-sub" id="res-k-sub">7 dias / 36 horas</div>
+              </div>
+            </div>
+
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px;">
+              Composição Qualitativa por Categoria Profissional:
+            </h3>
+
+            <div class="team-breakdown">
+              <div class="team-item enf">
+                <div class="role">Enfermeiros (Nível Superior)</div>
+                <div class="count" id="res-enf-count">13</div>
+                <div class="pct" id="res-enf-pct">35.4% da equipe</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;" id="res-enf-raw">(12.98 exatos)</div>
+              </div>
+
+              <div class="team-item tec">
+                <div class="role">Técnicos / Auxiliares</div>
+                <div class="count" id="res-tec-count">24</div>
+                <div class="pct" id="res-tec-pct">64.6% da equipe</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;" id="res-tec-raw">(23.67 exatos)</div>
+              </div>
+            </div>
+
+            <!-- Memorial Passo a Passo em Tempo Real -->
+            <div style="margin-top: 24px;">
+              <h4 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px;">
+                Memorial Didático de Cálculo:
+              </h4>
+              <div class="math-step">
+                <strong>1. Carga de Trabalho Diária (THE):</strong>
+                <code id="step-the">THE = (10 × 4) + (9 × 6) + (5 × 10) + (2 × 10) + (0 × 18) = 164.00h</code>
+              </div>
+              <div class="math-step">
+                <strong>2. Coeficiente Operacional (k × IST):</strong>
+                <code id="step-coeff">k = 7 / 36 = 0.1944 | IST = 1 + (15 / 100) = 1.15</code>
+              </div>
+              <div class="math-step">
+                <strong>3. Quantitativo de Pessoal (QP):</strong>
+                <code id="step-qp">QP = 164.00 × 0.1944 × 1.15 = 36.65 profissionais</code>
+              </div>
+              <div class="math-step" style="border-left-color: var(--success);">
+                <strong>4. Arredondamento Mandatório COFEN:</strong>
+                <code id="step-round">Teto assistencial: ceil(36.65) = 37 profissionais</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 2: DIRETRIZES & TEORIA COFEN -->
+    <div id="pane-guia" class="tab-pane">
+      <div class="guide-box">
+        <h3>🏛️ Base Normativa Vigente: Resolução COFEN nº 743/2024</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+          Revoga a antiga Resolução COFEN nº 543/2017 e estabelece parâmetros técnicos atualizados para o cálculo de dimensionamento nos serviços de saúde hospitalares, ambulatoriais e de atenção básica.
+        </p>
+
+        <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+          Tabela Oficial de Horas de Assistência e Proporção por Categoria Profissional:
+        </h4>
+
+        <table class="custom-table" style="margin-bottom: 20px;">
+          <thead>
+            <tr>
+              <th>Classificação do Cuidado</th>
+              <th>Horas / Paciente / 24h</th>
+              <th>% Mínimo de Enfermeiros</th>
+              <th>% Nível Médio (Técnicos/Aux.)</th>
+              <th>Observação Legal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Cuidado Mínimo (PCM)</strong></td>
+              <td class="num-col">4 horas</td>
+              <td>33%</td>
+              <td>67%</td>
+              <td>Admite Técnicos e Auxiliares</td>
+            </tr>
+            <tr>
+              <td><strong>Cuidado Intermediário (PCI)</strong></td>
+              <td class="num-col">6 horas</td>
+              <td>33%</td>
+              <td>67%</td>
+              <td>Admite Técnicos e Auxiliares</td>
+            </tr>
+            <tr>
+              <td><strong>Alta Dependência (PCAD)</strong></td>
+              <td class="num-col">10 horas</td>
+              <td>36%</td>
+              <td>64%</td>
+              <td>Admite Técnicos e Auxiliares</td>
+            </tr>
+            <tr>
+              <td><strong>Semi-intensivo (PCSI)</strong></td>
+              <td class="num-col">10 horas</td>
+              <td>42%</td>
+              <td>58%</td>
+              <td><strong>Apenas Técnicos</strong> (vedado auxiliar)</td>
+            </tr>
+            <tr>
+              <td><strong>Intensivo (PCIt)</strong></td>
+              <td class="num-col">18 horas</td>
+              <td>52%</td>
+              <td>48%</td>
+              <td><strong>Apenas Técnicos</strong> (vedado auxiliar)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h4 style="color: #0369a1; font-size: 0.95rem; margin-bottom: 8px;">Constante de Marinho (k)</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+              Garante a cobertura ininterrupta da assistência (24h/dia, 7 dias por semana):
+            </p>
+            <div style="font-family: 'Fira Code', monospace; background: #fff; padding: 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #e2e8f0;">
+              k = 7 / Jornada Semanal<br>
+              • 30h: 7 / 30 ≈ 0,2333<br>
+              • 36h: 7 / 36 ≈ 0,1944<br>
+              • 40h: 7 / 40 = 0,1750
+            </div>
+          </div>
+
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h4 style="color: #0369a1; font-size: 0.95rem; margin-bottom: 8px;">Índice de Segurança Técnica (IST)</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+              Compensa ausências legais programadas (férias, folgas) e imprevistas (atestados, licenças):
+            </p>
+            <div style="font-family: 'Fira Code', monospace; background: #fff; padding: 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #e2e8f0;">
+              IST Mínimo = 15% (multiplicador 1,15)<br>
+              Se a taxa real de absenteísmo da instituição for superior a 15%, o valor real apurado deve ser adotado.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 3: EXERCÍCIOS RESOLVIDOS & CASOS DE AULA -->
+    <div id="pane-exercicios" class="tab-pane">
+      
+      <!-- Exercício 1 -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <div>
+            <span class="pill pill-blue">Caso 1</span>
+            <strong style="margin-left: 8px;">Enfermaria de Clínica Cirúrgica (Cuidado Misto)</strong>
+          </div>
+          <button class="toggle-solution" onclick="toggleSolution('sol-1', this)">Mostrar Resolução</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Uma unidade cirúrgica com <strong>20 leitos</strong> opera com <strong>100% de ocupação</strong>. A distribuição média é: <strong>8 PCM</strong>, <strong>8 PCI</strong> e <strong>4 PCAD</strong>. A jornada semanal é de <strong>36h</strong> e o <strong>IST é 15%</strong>.
+        </p>
+        <p style="font-size: 0.85rem; font-weight: 600; color: #0369a1;">
+          Objetivo: Calcular o THE diário, o quantitativo total de pessoal (QP) e a composição por categoria.
+        </p>
+        <div id="sol-1" class="solution-box">
+          <ul style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8; list-style-type: none;">
+            <li><strong>1. Carga de Trabalho Diária (THE):</strong> (8 × 4h) + (8 × 6h) + (4 × 10h) = 32 + 48 + 40 = <strong>120 horas</strong></li>
+            <li><strong>2. Constantes:</strong> k = 7 / 36 ≈ 0,1944 | IST = 1,15</li>
+            <li><strong>3. QP Total Bruto:</strong> 120 × (7 / 36) × 1,15 = <strong>26,83</strong> → <strong>27 profissionais</strong> (arredondamento para cima)</li>
+            <li><strong>4. Horas de Enfermeiro:</strong> (32h × 33%) + (48h × 33%) + (40h × 36%) = 10,56 + 15,84 + 14,40 = 40,8h (34% do THE)</li>
+            <li><strong>5. Horas de Nível Médio:</strong> 120h - 40,8h = 79,2h (66% do THE)</li>
+            <li><strong>Gabarito Final:</strong> <strong>10 Enfermeiros</strong> (26,83 × 34% = 9,12 → 10) e <strong>18 Técnicos/Auxiliares</strong> (26,83 × 66% = 17,71 → 18). Total: <strong>28 postos previstos</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Exercício 2 -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <div>
+            <span class="pill pill-red">Caso 2</span>
+            <strong style="margin-left: 8px;">Unidade de Terapia Intensiva Adulto (PCIt)</strong>
+          </div>
+          <button class="toggle-solution" onclick="toggleSolution('sol-2', this)">Mostrar Resolução</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Uma UTI Geral Adulto possui <strong>10 leitos operacionais</strong> com taxa média de ocupação de <strong>90%</strong> (9 pacientes em Cuidados Intensivos - 18h). A equipe atua em jornada de <strong>30h semanais</strong> e, pelo perfil de complexidade e absenteísmo, adota-se <strong>IST de 20%</strong>.
+        </p>
+        <div id="sol-2" class="solution-box">
+          <ul style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8; list-style-type: none;">
+            <li><strong>1. Pacientes e THE:</strong> 10 leitos × 90% = 9 pacientes. THE = 9 × 18h = <strong>162 horas</strong></li>
+            <li><strong>2. Constantes:</strong> k = 7 / 30 ≈ 0,2333 | IST = 1,20</li>
+            <li><strong>3. QP Total:</strong> 162 × (7 / 30) × 1,20 = <strong>45,36</strong> → <strong>46 profissionais</strong></li>
+            <li><strong>4. Composição (Regra PCIt: 52% Enfermeiros / 48% Técnicos):</strong>
+              <br>• Enfermeiros: 45,36 × 52% = 23,59 → <strong>24 Enfermeiros</strong>
+              <br>• Técnicos de Enfermagem: 45,36 × 48% = 21,77 → <strong>22 Técnicos</strong> (vedada a atuação de auxiliares em UTI)
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Exercício 3 -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <div>
+            <span class="pill pill-amber">Caso 3</span>
+            <strong style="margin-left: 8px;">Unidade Semi-intensiva Pediátrica (PCSI)</strong>
+          </div>
+          <button class="toggle-solution" onclick="toggleSolution('sol-3', this)">Mostrar Resolução</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Unidade com <strong>12 leitos</strong> com 100% de pacientes em Cuidados Semi-intensivos (10h). Jornada de <strong>40h semanais</strong> e <strong>IST de 15%</strong>.
+        </p>
+        <div id="sol-3" class="solution-box">
+          <ul style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8; list-style-type: none;">
+            <li><strong>1. THE:</strong> 12 pacientes × 10h = <strong>120 horas</strong></li>
+            <li><strong>2. Constantes:</strong> k = 7 / 40 = 0,1750 | IST = 1,15</li>
+            <li><strong>3. QP Total:</strong> 120 × 0,1750 × 1,15 = <strong>24,15</strong> → <strong>25 profissionais</strong></li>
+            <li><strong>4. Composição (Regra PCSI: 42% Enfermeiros / 58% Técnicos):</strong>
+              <br>• Enfermeiros: 24,15 × 42% = 10,14 → <strong>11 Enfermeiros</strong>
+              <br>• Técnicos de Enfermagem: 24,15 × 58% = 14,01 → <strong>15 Técnicos</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Parâmetros oficiais COFEN 743/2024
+    const PARAMS = {
+      pcm:  { hours: 4,  enf_pct: 0.33, tec_pct: 0.67 },
+      pci:  { hours: 6,  enf_pct: 0.33, tec_pct: 0.67 },
+      pcad: { hours: 10, enf_pct: 0.36, tec_pct: 0.64 },
+      pcsi: { hours: 10, enf_pct: 0.42, tec_pct: 0.58 },
+      pcit: { hours: 18, enf_pct: 0.52, tec_pct: 0.48 }
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      
+      const targetPane = document.getElementById('pane-' + tabId);
+      if (targetPane) targetPane.classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    function toggleSolution(id, btn) {
+      const box = document.getElementById(id);
+      if (box.classList.contains('show')) {
+        box.classList.remove('show');
+        btn.textContent = 'Mostrar Resolução';
+      } else {
+        box.classList.add('show');
+        btn.textContent = 'Ocultar Resolução';
+      }
+    }
+
+    function calculate() {
+      // Inputs gerais
+      const workload = parseFloat(document.getElementById('workload').value) || 36;
+      const istPct = parseFloat(document.getElementById('ist-pct').value) || 15;
+      const totalBeds = parseFloat(document.getElementById('total-beds').value) || 1;
+
+      // Pacientes por nível
+      const nPCM = parseFloat(document.getElementById('p-pcm').value) || 0;
+      const nPCI = parseFloat(document.getElementById('p-pci').value) || 0;
+      const nPCAD = parseFloat(document.getElementById('p-pcad').value) || 0;
+      const nPCSI = parseFloat(document.getElementById('p-pcsi').value) || 0;
+      const nPCIt = parseFloat(document.getElementById('p-pcit').value) || 0;
+
+      const totalPatients = nPCM + nPCI + nPCAD + nPCSI + nPCIt;
+      document.getElementById('total-patients').textContent = totalPatients;
+
+      // Taxa de ocupação
+      const occPct = totalBeds > 0 ? Math.round((totalPatients / totalBeds) * 100) : 0;
+      const occBadge = document.getElementById('occupancy-badge');
+      occBadge.textContent = 'Ocupação: ' + occPct + '% (' + totalPatients + '/' + totalBeds + ' leitos)';
+      if (occPct > 100) {
+        occBadge.className = 'pill pill-red';
+      } else if (occPct >= 80) {
+        occBadge.className = 'pill pill-blue';
+      } else {
+        occBadge.className = 'pill pill-green';
+      }
+
+      // THE Parciais
+      const thePCM = nPCM * PARAMS.pcm.hours;
+      const thePCI = nPCI * PARAMS.pci.hours;
+      const thePCAD = nPCAD * PARAMS.pcad.hours;
+      const thePCSI = nPCSI * PARAMS.pcsi.hours;
+      const thePCIt = nPCIt * PARAMS.pcit.hours;
+
+      document.getElementById('the-pcm').textContent = thePCM.toFixed(1) + 'h';
+      document.getElementById('the-pci').textContent = thePCI.toFixed(1) + 'h';
+      document.getElementById('the-pcad').textContent = thePCAD.toFixed(1) + 'h';
+      document.getElementById('the-pcsi').textContent = thePCSI.toFixed(1) + 'h';
+      document.getElementById('the-pcit').textContent = thePCIt.toFixed(1) + 'h';
+
+      // THE Total
+      const theTotal = thePCM + thePCI + thePCAD + thePCSI + thePCIt;
+      document.getElementById('the-total').textContent = theTotal.toFixed(1) + 'h';
+      document.getElementById('res-the').textContent = theTotal.toFixed(1) + 'h';
+
+      // Constantes
+      const k = 7 / workload;
+      const istMult = 1 + (istPct / 100);
+
+      document.getElementById('res-k').textContent = k.toFixed(4);
+      document.getElementById('res-k-sub').textContent = '7 dias / ' + workload + 'h semanais';
+
+      // QP Total
+      const qpRaw = theTotal * k * istMult;
+      const qpCeil = Math.ceil(qpRaw);
+
+      document.getElementById('res-qp-raw').textContent = 'Valor exato calculado: ' + qpRaw.toFixed(2) + ' profissionais';
+      document.getElementById('res-qp-ceil').textContent = qpCeil;
+
+      // Ponderação das Horas de Enfermeiro e Técnico
+      const hoursEnf = (thePCM * PARAMS.pcm.enf_pct) +
+                       (thePCI * PARAMS.pci.enf_pct) +
+                       (thePCAD * PARAMS.pcad.enf_pct) +
+                       (thePCSI * PARAMS.pcsi.enf_pct) +
+                       (thePCIt * PARAMS.pcit.enf_pct);
+
+      const hoursTec = theTotal - hoursEnf;
+
+      const pctEnf = theTotal > 0 ? (hoursEnf / theTotal) : 0.33;
+      const pctTec = theTotal > 0 ? (hoursTec / theTotal) : 0.67;
+
+      const enfRaw = qpRaw * pctEnf;
+      const tecRaw = qpRaw * pctTec;
+
+      const enfCeil = Math.ceil(enfRaw);
+      const tecCeil = Math.ceil(tecRaw);
+
+      document.getElementById('res-enf-count').textContent = enfCeil;
+      document.getElementById('res-enf-pct').textContent = (pctEnf * 100).toFixed(1) + '% da carga total';
+      document.getElementById('res-enf-raw').textContent = '(' + enfRaw.toFixed(2) + ' exatos)';
+
+      document.getElementById('res-tec-count').textContent = tecCeil;
+      document.getElementById('res-tec-pct').textContent = (pctTec * 100).toFixed(1) + '% da carga total';
+      document.getElementById('res-tec-raw').textContent = '(' + tecRaw.toFixed(2) + ' exatos)';
+
+      // Memorial didático
+      document.getElementById('step-the').textContent = 
+        'THE = (' + nPCM + ' × 4) + (' + nPCI + ' × 6) + (' + nPCAD + ' × 10) + (' + nPCSI + ' × 10) + (' + nPCIt + ' × 18) = ' + theTotal.toFixed(2) + 'h';
+      
+      document.getElementById('step-coeff').textContent = 
+        'k = 7 / ' + workload + ' = ' + k.toFixed(4) + ' | IST = 1 + (' + istPct + ' / 100) = ' + istMult.toFixed(2);
+
+      document.getElementById('step-qp').textContent = 
+        'QP = ' + theTotal.toFixed(2) + ' × ' + k.toFixed(4) + ' × ' + istMult.toFixed(2) + ' = ' + qpRaw.toFixed(2) + ' profissionais';
+
+      document.getElementById('step-round').textContent = 
+        'Teto assistencial: ceil(' + qpRaw.toFixed(2) + ') = ' + qpCeil + ' profissionais (' + enfCeil + ' Enf. + ' + tecCeil + ' Téc.)';
+    }
+
+    function loadPreset(type) {
+      if (type === 'clinica') {
+        document.getElementById('unit-name').value = 'Enfermaria de Clínica Cirúrgica';
+        document.getElementById('workload').value = '36';
+        document.getElementById('ist-pct').value = '15';
+        document.getElementById('total-beds').value = '20';
+        document.getElementById('p-pcm').value = '8';
+        document.getElementById('p-pci').value = '8';
+        document.getElementById('p-pcad').value = '4';
+        document.getElementById('p-pcsi').value = '0';
+        document.getElementById('p-pcit').value = '0';
+      } else if (type === 'uti') {
+        document.getElementById('unit-name').value = 'UTI Geral Adulto';
+        document.getElementById('workload').value = '30';
+        document.getElementById('ist-pct').value = '20';
+        document.getElementById('total-beds').value = '10';
+        document.getElementById('p-pcm').value = '0';
+        document.getElementById('p-pci').value = '0';
+        document.getElementById('p-pcad').value = '0';
+        document.getElementById('p-pcsi').value = '0';
+        document.getElementById('p-pcit').value = '9';
+      } else if (type === 'semi') {
+        document.getElementById('unit-name').value = 'Semi-Intensivo Pediátrico';
+        document.getElementById('workload').value = '40';
+        document.getElementById('ist-pct').value = '15';
+        document.getElementById('total-beds').value = '12';
+        document.getElementById('p-pcm').value = '0';
+        document.getElementById('p-pci').value = '0';
+        document.getElementById('p-pcad').value = '0';
+        document.getElementById('p-pcsi').value = '12';
+        document.getElementById('p-pcit').value = '0';
+      } else if (type === 'limpar') {
+        document.getElementById('unit-name').value = 'Nova Unidade Hospitalar';
+        document.getElementById('workload').value = '36';
+        document.getElementById('ist-pct').value = '15';
+        document.getElementById('total-beds').value = '20';
+        document.getElementById('p-pcm').value = '0';
+        document.getElementById('p-pci').value = '0';
+        document.getElementById('p-pcad').value = '0';
+        document.getElementById('p-pcsi').value = '0';
+        document.getElementById('p-pcit').value = '0';
+      }
+      calculate();
+    }
+
+    // Inicialização ao carregar
+    window.onload = function() {
+      calculate();
+    };
+  </script>
+</body>
+</html>
